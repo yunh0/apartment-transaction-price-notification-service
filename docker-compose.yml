@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  mysql:
+    container_name: mysql_house_batch
+    image: mysql:8.0.37
+    environment:
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_ROOT_PASSWORD: "dbsghdla1!"
+      MYSQL_DATABASE: "house_batch"
+    ports:
+      - "3306:3306"
+    command:
+      - "mysqld"
+      - "--collation-server=utf8mb4_unicode_ci"
+      - "--character-set-server=utf8mb4"
