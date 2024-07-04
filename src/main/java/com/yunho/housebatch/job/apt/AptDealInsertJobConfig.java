@@ -41,30 +41,22 @@ public class AptDealInsertJobConfig {
     private final StepBuilderFactory stepBuilderFactory;
 
     private final ApartmentApiResource apartmentApiResource;
-    private final LawdRepository lawdRepository;
 
     @Bean
     public Job aptDealInsertJob(
             Step guLawdCdStep,
-            Step contextPrintStep,
-            Step aptDealInsertStep
+            Step contextPrintStep
+//            Step aptDealInsertStep
     ){
         return jobBuilderFactory.get("aptDealInsertJob")
                 .incrementer(new RunIdIncrementer())
-                .validator(aptDealJobParameterValidator())
+                .validator(new YearMonthParameterValidator())
                 .start(guLawdCdStep)
-                .next(contextPrintStep)
-                .next(aptDealInsertStep)
+                .on("CONTINUABLE").to(contextPrintStep).next(guLawdCdStep)
+                .from(guLawdCdStep)
+                .on("*").end()
+                .end()
                 .build();
-    }
-
-    private JobParametersValidator aptDealJobParameterValidator(){
-        CompositeJobParametersValidator validator = new CompositeJobParametersValidator();
-        validator.setValidators(Arrays.asList(
-                new YearMonthParameterValidator()
-        ));
-
-        return validator;
     }
 
     @JobScope
@@ -77,16 +69,8 @@ public class AptDealInsertJobConfig {
 
     @StepScope
     @Bean
-    public Tasklet guLawdCdTasklet(){
-        return (stepContribution, chunkContext) -> {
-            StepExecution stepExecution = chunkContext.getStepContext().getStepExecution();
-            ExecutionContext executionContext = stepExecution.getJobExecution().getExecutionContext();
-
-            List<String> guLawdCds = lawdRepository.findDistinctGuLawdCd();
-            executionContext.putString("guLawdCd", guLawdCds.get(0));
-
-            return RepeatStatus.FINISHED;
-        };
+    public Tasklet guLawdCdTasklet(LawdRepository lawdRepository){
+        return new GuLawdTasklet(lawdRepository);
     }
 
     @JobScope
