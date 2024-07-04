@@ -3,6 +3,7 @@ package com.yunho.housebatch.job.apt;
 import com.yunho.housebatch.adapter.ApartmentApiResource;
 import com.yunho.housebatch.core.dto.AptDealDto;
 import com.yunho.housebatch.core.repository.LawdRepository;
+import com.yunho.housebatch.core.service.AptDealService;
 import com.yunho.housebatch.job.validator.FilePathParameterValidator;
 import com.yunho.housebatch.job.validator.LawdCdParameterValidator;
 import com.yunho.housebatch.job.validator.YearMonthParameterValidator;
@@ -45,14 +46,13 @@ public class AptDealInsertJobConfig {
     @Bean
     public Job aptDealInsertJob(
             Step guLawdCdStep,
-            Step contextPrintStep
-//            Step aptDealInsertStep
+            Step aptDealInsertStep
     ){
         return jobBuilderFactory.get("aptDealInsertJob")
                 .incrementer(new RunIdIncrementer())
                 .validator(new YearMonthParameterValidator())
                 .start(guLawdCdStep)
-                .on("CONTINUABLE").to(contextPrintStep).next(guLawdCdStep)
+                .on("CONTINUABLE").to(aptDealInsertStep).next(guLawdCdStep)
                 .from(guLawdCdStep)
                 .on("*").end()
                 .end()
@@ -71,23 +71,6 @@ public class AptDealInsertJobConfig {
     @Bean
     public Tasklet guLawdCdTasklet(LawdRepository lawdRepository){
         return new GuLawdTasklet(lawdRepository);
-    }
-
-    @JobScope
-    @Bean
-    public Step contextPrintStep(Tasklet contextPrintTasklet){
-        return stepBuilderFactory.get("contextPrintStep")
-                .tasklet(contextPrintTasklet)
-                .build();
-    }
-
-    @StepScope
-    @Bean
-    public Tasklet contextPrintTasklet(@Value("#{jobExecutionContext['guLawdCd']}") String guLawdCd){
-        return ((stepContribution, chunkContext) -> {
-            System.out.println("[contextPrintStep] guLawdCd = " + guLawdCd);
-            return RepeatStatus.FINISHED;
-        });
     }
 
     @JobScope
@@ -128,9 +111,10 @@ public class AptDealInsertJobConfig {
 
     @StepScope
     @Bean
-    public ItemWriter<AptDealDto> aptDealWriter(){
+    public ItemWriter<AptDealDto> aptDealWriter(AptDealService aptDealService){
         return list -> {
-            list.forEach(System.out::println);
+            list.forEach(aptDealService::upsert);
+            System.out.println("=========== writing completed ===============");
         };
     }
 }
