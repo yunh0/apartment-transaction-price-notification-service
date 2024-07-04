@@ -1,6 +1,7 @@
 package com.yunho.housebatch.core.service;
 
 import com.yunho.housebatch.core.dto.AptDealDto;
+import com.yunho.housebatch.core.dto.AptDto;
 import com.yunho.housebatch.core.entity.Apt;
 import com.yunho.housebatch.core.entity.AptDeal;
 import com.yunho.housebatch.core.repository.AptDealRepository;
@@ -8,6 +9,10 @@ import com.yunho.housebatch.core.repository.AptRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * AptDealDto에 있는 값을 Apt, AptDeal 엔티티로 저장한다.
@@ -37,6 +42,14 @@ public class AptDealService {
         aptDeal.setDealCanceled(dto.isDealCanceled());
         aptDeal.setDealCanceledDate(dto.getDealCanceledDate());
         aptDealRepository.save(aptDeal);
+    }
+
+    public List<AptDto> findByGuLawdCdAndDealDate(String guLawdCd, LocalDate dealDate){
+        return aptDealRepository.findByDealCanceledIsFalseAndDealDateEquals(dealDate)
+                .stream()
+                .filter(aptDeal -> aptDeal.getApt().getGuLawdCd().equals(guLawdCd))
+                .map(aptDeal -> new AptDto(aptDeal.getApt().getAptName(), aptDeal.getDealAmount()))
+                .collect(Collectors.toList());
     }
 
 }
