@@ -23,6 +23,10 @@ spring:
   batch:
     jdbc:
       initialize-schema: always
+external:
+  apartment-api:
+    path: http://openapi.molit.go.kr:8081/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTrade
+    service-key: 7tqj91v3gM7kFRZZSCrTUG1WdsedUh0rJewmEb%2FJYZtrztrrX1uJs9uxJeDxR%2BxHKJmNYRw4cvH1fybKqlY%2FGA%3D%3D
 
 ---
 spring:
